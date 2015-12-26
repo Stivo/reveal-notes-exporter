@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015, ScalaFX Project
+ namec) 2011-2015, ScalaFX Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,52 +49,74 @@ object NoteExporter extends JFXApp {
 
   val webView = new WebView()
   private val string: String = new File("deck/index.html").toURI.toString
-  println(string)
   webView.engine.load(string)
   webView.engine.javaScriptEnabled = true
 
-  private val script: String = Source.fromFile(new File("src/main/javascript/exportNotes.js")).mkString
-  println(script)
+  private val exportNotesScript: String = readScript("exportNotes.js")
+  private val getTitleScript: String = readScript("getTitle.js")
+
+  def readScript(name: String): String = {
+    Source.fromFile(new File("src/main/javascript/"+name)).mkString
+  }
+
+
   val startExportLater: Runnable = () => {
     Thread.sleep(2000)
     Platform.runLater {
       println("Starting script")
-      exportNotes()
+      doExport()
     }
   }
 
-  def exportNotes(): Unit = {
-    def getNext() = {
-      webView.engine.executeScript(script) match {
-        case x: String => Option(parseNotes(x))
-      }
-    }
-    val list = Stream.continually(getNext()).takeWhile(_.isDefined).flatten.toList
-    val markdown: String = convertToMarkdown(list)
-    Files.write(new File("markdown.md").toPath, markdown.getBytes("UTF-8"))
+  def doExport(): Unit = {
+    var title = readTitle()
+    var notes = readNotes()
+    val markdown: String = convertToMarkdown(title, notes)
+    Files.write(new File("notes.md").toPath, markdown.getBytes("UTF-8"))
 
     System.exit(1)
   }
+
+  def readTitle(): String = webView.engine.executeScript(getTitleScript) match {
+    case title: String => title
+  }
+
+  def readNotes(): Seq[NoteEntry] = {
+    def getNext() = {
+      webView.engine.executeScript(exportNotesScript) match {
+        case x: String =>
+          val notes: NoteEntry = parseNotes(x)
+          if (notes != null) {
+            stage.title = "Scala Note Exporter at " + notes.number
+          }
+          Option(notes)
+      }
+    }
+    Stream.continually(getNext()).takeWhile(_.isDefined).flatten.toList
+  }
+
   new Thread(startExportLater).start()
   stage = new PrimaryStage {
     initStyle(StageStyle.UNIFIED)
-    title = "ScalaFX Hello World"
+    title = "Scala Note Exporter"
     scene = new Scene {
       fill = Color.rgb(38, 38, 38)
       content = webView
     }
   }
 
-  def parseNotes(s: String) = {
-    val mapper = new ObjectMapper() with ScalaObjectMapper
-    mapper.registerModule(DefaultScalaModule)
+  val mapper = new ObjectMapper() with ScalaObjectMapper
+  mapper.registerModule(DefaultScalaModule)
+  def parseNotes(s: String): NoteEntry = {
     val entries = mapper.readValue[NoteEntry](s)
     entries
   }
 
-  def convertToMarkdown(list: Seq[NoteEntry]): String = {
+  def convertToMarkdown(title: String, list: Seq[NoteEntry]): String = {
     val entries = list.map(_.toMarkdown()).mkString("\n")
-    ""
+    s"""## Notes for "$title"
+       |$entries
+     """.stripMargin
   }
 }
 

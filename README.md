@@ -11,8 +11,9 @@ These can then be printed for a handy reference in case no second screen is avai
     (must be a valid URL, e. g. file:///opt/deck/index.html)
     1. The program will open the slide set
     2. It will start exporting the notes one by one (the window is not refreshed in that time)
-    3. It will open the generated html. Then it must be manually closed.
- 1. The program wrote a notes.md and a notes.html file.
+    3. The program closes itself.
+ 1. The program wrote a markdown file and an html file.
+    The html file will be automatically opened in the default browser.
  1. Print either of those files.
 
 ### Command line

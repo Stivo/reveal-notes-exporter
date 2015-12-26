@@ -1,5 +1,6 @@
 package com.github.stivo.revealnotesexporter
 
+import java.awt.Desktop
 import java.io.File
 import java.nio.file.Files
 
@@ -27,7 +28,7 @@ object NoteExporter extends JFXApp {
     if (parameters.unnamed.nonEmpty) {
       parameters.unnamed.head
     } else {
-      new File("deck/index.html").toURI.toString
+      new File("decks/fast-track-to-scala/index.html").toURI.toString
     }
   }
   private val outputFileName: String = parameters.named.getOrElse("fileName", "notes")
@@ -58,10 +59,11 @@ object NoteExporter extends JFXApp {
     Files.write(new File(s"$outputFileName.md").toPath, markdown.getBytes("UTF-8"))
 
     val html: String = createHtml(markdown)
-    Files.write(new File(s"$outputFileName.html").toPath, html.getBytes("UTF-8"))
+    val outputHtmlFile: File = new File(s"$outputFileName.html")
+    Files.write(outputHtmlFile.toPath, html.getBytes("UTF-8"))
 
-    webView.engine.load(new File(s"$outputFileName.html").toURI.toString)
-    stage.title = "Done"
+    Desktop.getDesktop.open(outputHtmlFile)
+    System.exit(0)
   }
 
   def createHtml(markdown: String): String = {

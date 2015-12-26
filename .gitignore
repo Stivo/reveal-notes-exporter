@@ -1,4 +1,5 @@
 .idea
 target/
-deck
+decks
 notes.md
+notes.html

@@ -1,5 +1,5 @@
 function currentSlideNum() {
-    return parseInt(Reveal.getProgress() * (Reveal.getTotalSlides() - 1) + 1);
+    return Math.round(Reveal.getProgress() * (Reveal.getTotalSlides() - 1) + 1);
 }
 
 function nextNote() {

@@ -1,6 +1,6 @@
 package com.github.stivo.revealnotesexporter
 
-import java.awt.Desktop
+import java.awt.{EventQueue, Desktop}
 import java.io.File
 import java.nio.file.Files
 
@@ -43,8 +43,8 @@ object NoteExporter extends JFXApp {
     Source.fromFile(new File("src/main/javascript/"+name)).mkString
   }
 
-  val startExportLater: Runnable = () => {
-    Thread.sleep(3000)
+  val startExportLater = () => {
+    Thread.sleep(5000)
     Platform.runLater {
       println("Starting script")
       doExport()
@@ -62,8 +62,10 @@ object NoteExporter extends JFXApp {
     val outputHtmlFile: File = new File(s"$outputFileName.html")
     Files.write(outputHtmlFile.toPath, html.getBytes("UTF-8"))
 
-    Desktop.getDesktop.open(outputHtmlFile)
-    System.exit(0)
+    EventQueue.invokeLater {() =>
+      Desktop.getDesktop.open(outputHtmlFile)
+      System.exit(0)
+    }
   }
 
   def createHtml(markdown: String): String = {
@@ -88,6 +90,7 @@ object NoteExporter extends JFXApp {
           val notes: NoteEntry = parseNotes(x)
           if (notes != null) {
             stage.title = "Note Exporter at " + notes.number
+            println("Exporting notes for "+notes.number)
           }
           Option(notes)
       }

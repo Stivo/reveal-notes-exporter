@@ -19,21 +19,23 @@ import scalafx.stage.StageStyle
 import language.implicitConversions
 
 object NoteExporter extends JFXApp {
+  private val inputUrl: String = {
+    if (parameters.unnamed.nonEmpty) {
+      parameters.unnamed.head
+    } else {
+      "decks/fast-track-to-scala/index.html"
+    }
+  }
+  require(new File(inputUrl).exists(), s"File $inputUrl does not exist")
+
   implicit def funToRunnable(fun: () => Unit): Runnable = new Runnable() {
     def run() = fun()
   }
 
   val webView = new WebView()
-  private val inputUrl: String = {
-    if (parameters.unnamed.nonEmpty) {
-      parameters.unnamed.head
-    } else {
-      new File("decks/fast-track-to-scala/index.html").toURI.toString
-    }
-  }
   private val outputFileName: String = parameters.named.getOrElse("fileName", "notes")
 
-  webView.engine.load(inputUrl)
+  webView.engine.load(new File(inputUrl).toURI.toURL.toString)
   webView.engine.javaScriptEnabled = true
 
   private val exportNotesScript: String = readScript("exportNotes.js")
@@ -64,7 +66,7 @@ object NoteExporter extends JFXApp {
 
     EventQueue.invokeLater {() =>
       Desktop.getDesktop.open(outputHtmlFile)
-      System.exit(0)
+      Platform.exit()
     }
   }
 
